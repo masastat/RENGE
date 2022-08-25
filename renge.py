@@ -3,6 +3,7 @@ import jax.numpy as jnp
 import numpy as np
 import optuna
 import pandas as pd
+import tqdm
 from jax import grad, jit
 from jax.interpreters import xla
 from scipy.optimize import minimize
@@ -416,14 +417,13 @@ class Renge():
 
         return self.A
 
-    def calc_pval(self, n_boot=30):
+    def calc_qval(self, n_boot=30):
         if not hasattr(self, "A"):
             raise ValueError("no attribute named A. run fit() first")
 
         A_boot_list = []
         X_t = np.where(self.X_prep.iloc[:, -len(self.t):] == 1)[1]
-        for i in range(n_boot):
-            # print(i)
+        for i in tqdm.tqdm(range(n_boot)):
             E_boot = self.E.values.copy()
             # resample E
             for j in range(len(self.t)):
@@ -464,8 +464,8 @@ class Renge():
                     A_pval[i, j] = 0
 
         A_pval = np.exp(A_pval)
-        A_rejected, A_pval_adj = fdrcorrection(A_pval.flatten(), alpha=0.05, method='indep', is_sorted=False)
-        A_pval_adj = np.reshape(A_pval_adj, newshape=(A_pval.shape))
-        self.A_pval_adj = pd.DataFrame(A_pval_adj, index=self.A.index, columns=self.A.columns)
+        A_rejected, A_qval = fdrcorrection(A_pval.flatten(), alpha=0.05, method='indep', is_sorted=False)
+        A_qval = np.reshape(A_qval, newshape=(A_pval.shape))
+        self.A_qval = pd.DataFrame(A_qval, index=self.A.index, columns=self.A.columns)
 
-        return self.A_pval_adj
+        return self.A_qval
