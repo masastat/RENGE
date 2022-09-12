@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "renge"
+version = "0.0.1"
+authors = [
+  { name="Masato Ishikawa", email="masatoiskw@gmail.com" },
+]
+description = "Infer gene regulatory networks from time-series single-cell CRISPR data."
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/masastat/RENGE"
+"Bug Tracker" = "https://github.com/masastat/RENGE/issues"
