@@ -2,10 +2,9 @@
 RENGE infers gene regulatory networks (GRNs) from time-series single-cell CRISPR screening data.
 
 
-## Download
+## Install
 ```
-git clone https://github.com/masastat/RENGE
-cd RENGE
+pip install renge
 ```
 
 ## Usage
