@@ -1,10 +1,9 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "renge"
-version = "0.0.1"
 authors = [
   { name="Masato Ishikawa", email="masatoiskw@gmail.com" },
 ]
@@ -12,11 +11,27 @@ description = "Infer gene regulatory networks from time-series single-cell CRISP
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
+dependencies = [
+    "numpy==1.19.5",
+    "pandas==1.1.5",
+    "scipy==1.4.1",
+    "scikit-learn==0.21.3",
+    "statsmodels==0.10.1",
+    "jax==0.2.0",
+    "optuna==2.3.0",
+    "tqdm==4.60.0"
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dynamic = ["version"]
+
+[tool.setuptools_scm]
+write_to = "src/renge/_version.py"
+version_scheme = "python-simplified-semver"
+local_scheme = "no-local-version"
 
 [project.urls]
 "Homepage" = "https://github.com/masastat/RENGE"
