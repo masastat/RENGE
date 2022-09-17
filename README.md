@@ -1,5 +1,13 @@
 # RENGE
-RENGE infers gene regulatory networks (GRNs) from time-series single-cell CRISPR screening data.
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/20146973/190864991-9f1bcc19-8007-41c8-920e-cd164fa36d1a.jpg" width="300" height="300"/>
+</p>
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/20146973/190865217-bad2bdc3-dd48-4499-a8af-f076ddfdf8ff.jpg" width="700" />
+</p>
+
+RENGE infers gene regulatory networks (GRNs) from time-series single-cell CRISPR analysis data.
 
 
 ## Install
