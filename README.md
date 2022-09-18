@@ -2,7 +2,7 @@
 ### REgulatory Network inference using GEne perturbation data
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/20146973/190884194-b5fcc838-1eeb-4a52-91c9-6bf58c3f736f.jpg" width="300" height="300"/>
+  <img src="https://user-images.githubusercontent.com/20146973/190888505-da05517c-7e06-4864-88c7-8caa26f1844a.jpg" width="300" height="300"/>
 </p>
 
 
