@@ -1,9 +1,10 @@
 # RENGE
 ### REgulatory Network inference using GEne perturbation data
 
-<p align="center">
+
+<!-- <p align="center">
   <img src="https://user-images.githubusercontent.com/20146973/190888505-da05517c-7e06-4864-88c7-8caa26f1844a.jpg" width="300" height="300"/>
-</p>
+</p> -->
 
 
 RENGE infers gene regulatory networks (GRNs) from time-series single-cell CRISPR analysis data.
