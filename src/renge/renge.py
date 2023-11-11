@@ -357,7 +357,7 @@ class Renge():
         self.n_gene = E.shape[1]
         self.t = self.X_prep.columns[self.n_gene:]
 
-    def estimate_hyperparams_and_fit(self, X, E, n_trials=10, max_n_k=5, min_n_k=1, cv_group='gene'):
+    def estimate_hyperparams_and_fit(self, X, E, n_trials=30, max_n_k=4, min_n_k=1, cv_group='gene'):
         if len(X.index) != len(E.index):
             raise ValueError("cell number did not match between X and E")
         if len(X.columns[:-1]) != len(E.columns):
