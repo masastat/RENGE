@@ -14,6 +14,7 @@ RENGE infers gene regulatory networks (GRNs) from time-series single-cell CRISPR
 ```
 pip install renge
 ```
+renge will be installed within a few minutes.
 
 ## Usage
 ### Network inference
@@ -54,5 +55,5 @@ E_pred : T x G pandas DataFrame of predicted expression.
 
 
 ## Reference
-TBD
+Inference of gene regulatory networks using time-series single-cell RNA-seq data with CRISPR perturbations, Masato Ishikawa, Seiichi Sugino, Yoshie Masuda, Yusuke Tarumoto, Yusuke Seto, Nobuko Taniyama, Fumi Wagai, Yuhei Yamauchi, Yasuhiro Kojima, Hisanori Kiryu, Kosuke Yusa, Mototsugu Eiraku, Atsushi Mochizuki, bioRxiv 2023.08.23.554254; doi: https://doi.org/10.1101/2023.08.23.554254
 
