@@ -57,5 +57,5 @@ E_pred : T x G pandas DataFrame of predicted expression.
 
 
 ## Reference
-Inference of gene regulatory networks using time-series single-cell RNA-seq data with CRISPR perturbations, Masato Ishikawa, Seiichi Sugino, Yoshie Masuda, Yusuke Tarumoto, Yusuke Seto, Nobuko Taniyama, Fumi Wagai, Yuhei Yamauchi, Yasuhiro Kojima, Hisanori Kiryu, Kosuke Yusa, Mototsugu Eiraku, Atsushi Mochizuki, bioRxiv 2023.08.23.554254; doi: https://doi.org/10.1101/2023.08.23.554254
+RENGE infers gene regulatory networks using time-series single-cell RNA-seq data with CRISPR perturbations, Masato Ishikawa, Seiichi Sugino, Yoshie Masuda, Yusuke Tarumoto, Yusuke Seto, Nobuko Taniyama, Fumi Wagai, Yuhei Yamauchi, Yasuhiro Kojima, Hisanori Kiryu, Kosuke Yusa, Mototsugu Eiraku, Atsushi Mochizuki, *Communications Biology*, 6(1), 1290 (2023); doi: https://doi.org/10.1038/s42003-023-05594-4
 
