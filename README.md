@@ -1,4 +1,6 @@
 # RENGE
+[![DOI](https://zenodo.org/badge/528344308.svg)](https://zenodo.org/doi/10.5281/zenodo.10114567)
+
 ### REgulatory Network inference using GEne perturbation data
 
 
