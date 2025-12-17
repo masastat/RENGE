@@ -10,16 +10,16 @@ authors = [
 description = "Infer gene regulatory networks from time-series single-cell CRISPR data."
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.13.2"
 dependencies = [
-    "numpy==1.19.5",
-    "pandas==1.1.5",
-    "scipy==1.4.1",
-    "scikit-learn==0.21.3",
-    "statsmodels==0.10.1",
-    "jax==0.2.0",
-    "optuna==2.3.0",
-    "tqdm==4.60.0"
+    "numpy==2.2.3",
+    "pandas==2.2.3",
+    "scipy==1.15.2",
+    "scikit-learn==1.6.1",
+    "statsmodels==0.14.4",
+    "jax==0.4.35",
+    "optuna==4.2.1",
+    "tqdm==4.67.1"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

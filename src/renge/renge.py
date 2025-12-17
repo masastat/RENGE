@@ -15,7 +15,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GroupKFold
 from sklearn.model_selection import cross_validate
 from statsmodels.stats.multitest import fdrcorrection
-
+from functools import partial
 
 class RengeSub(BaseEstimator):
     def __init__(self, C=1.0, A_l1_ratio=0.3, n_k=5, maxiter=3000):
@@ -24,34 +24,41 @@ class RengeSub(BaseEstimator):
         self.n_k = n_k
         self.maxiter = maxiter
 
-    @jax.partial(jit, static_argnums=(0,))
+    @partial(jit, static_argnums=(0,))
     def w(self, t, k, alpha, beta, gamma):
         return 1 / (1 + jnp.exp(-(alpha + beta * t - gamma * k)))
 
-    @jax.partial(jit, static_argnums=(0, 2, 3))
-    def loss_sq(self, params, X, E):
+    #@partial(jit, static_argnums=(0, 2, 3))
+    @partial(jit, static_argnums=(0,))
+    def loss_sq(self, params, X, E, X_t, X_list, E_list, w_idx_list, mask_list):
         A, b, w_params = params[:self.n_gene ** 2], params[self.n_gene ** 2: self.n_gene ** 2 + len(
             self.t) * self.n_gene], params[self.n_gene ** 2 + len(self.t) * self.n_gene:]
         alpha = w_params[:-2]
         beta, gamma = w_params[-2:]
         A = jnp.reshape(A, newshape=((self.n_gene, self.n_gene)))
-        X_t = np.where(X[:, -len(self.t):] == 1)[1]
+        #idx = X[:, -len(self.t):] == 1
+        #X_t = jnp.where(idx, size=idx.shape[0])[1]
 
         loss_sq_val = 0
 
         for j in range(len(self.t)):
             n_cell_j = (X_t == j).sum()
-            if n_cell_j == 0:
-                continue
+            #if n_cell_j == 0:
+            #    continue
 
-            X_j = X[X_t == j, :-len(self.t)].T  # gene x cell
-            E_j = E[X_t == j, :].T
+            #mask = X_t == j
+            #X_j = X[mask, :-len(self.t)].T  # gene x cell
+            #E_j = E[mask, :].T
+            X_j = X_list[j]
+            E_j = E_list[j]
 
             pred_j = jnp.tile(b[self.n_gene * j:self.n_gene * (j + 1)], (X_j.shape[1], 1)).T  # gene x cell
             M = jnp.where(X_j < 0, 0, 1)
-            X_a = X_j.copy()
-            X_a[0, X_a.sum(axis=0) == 0] = -1  # for control cell, use w value of gene 0
-            w_idx = jnp.array(np.where(X_a.T < 0)[1])
+            #X_a = X_j.copy()
+            #X_a[0, X_a.sum(axis=0) == 0] = -1  # for control cell, use w value of gene 0
+            #X_a = X_a.at[0, X_a.sum(axis=0) == 0].set(-1)
+            #w_idx = jnp.array(jnp.where(X_a.T < 0)[1])
+            w_idx = w_idx_list[j]
 
             for k in range(self.n_k):
                 pred_j_l = A @ X_j
@@ -62,15 +69,16 @@ class RengeSub(BaseEstimator):
                 pred_j += self.w(self.t[j], k, alpha, beta, gamma)[w_idx] * pred_j_l
 
             # ignore self repression (KO effect)
-            mask = X_j.copy()  # gene x cell
-            mask[X_j < 0] = 0
-            mask[X_j == 0] = 1
+            #mask = X_j.copy()  # gene x cell
+            #mask[X_j < 0] = 0
+            #mask[X_j == 0] = 1
+            mask = mask_list[j]
 
             loss_sq_val += jnp.sum(((E_j - pred_j) * mask) ** 2) / n_cell_j
 
         return loss_sq_val
 
-    @jax.partial(jit, static_argnums=(0,))
+    @partial(jit, static_argnums=(0,))
     def loss_regularize(self, params):
 
         A, b, _ = params[:self.n_gene ** 2], params[self.n_gene ** 2: self.n_gene ** 2 + len(
@@ -88,12 +96,63 @@ class RengeSub(BaseEstimator):
         return loss_regularize_val
 
     def loss(self, params, X, E):
-        loss_sq = self.loss_sq(params, X, E)
+        X_t = np.where(X[:, -len(self.t):] == 1)[1]
+        X_list = []
+        E_list = []
+        w_idx_list = []
+        mask_list = []
+        for j in range(len(self.t)):
+            X_j = X[X_t == j, :-len(self.t)].T  # gene x cell
+            E_j = E[X_t == j, :].T
+
+            X_a = X_j.copy()
+            X_a[0, X_a.sum(axis=0) == 0] = -1  # for control cell, use w value of gene 0
+            w_idx_j = jnp.array(np.where(X_a.T < 0)[1])
+
+
+            # ignore self repression (KO effect)
+            mask_j = X_j.copy()  # gene x cell
+            mask_j[X_j < 0] = 0
+            mask_j[X_j == 0] = 1
+
+            X_list.append(X_j)
+            E_list.append(E_j)
+            w_idx_list.append(w_idx_j)
+            mask_list.append(mask_j)
+
+        loss_sq = self.loss_sq(params, X, E, X_t, X_list, E_list, w_idx_list, mask_list)
         loss_regularize = self.loss_regularize(params)
         return loss_sq + loss_regularize
 
     def grad_wrap_loss(self, params, *args):
-        g_sq = np.array(grad(self.loss_sq)(params, args[0], args[1]), dtype=np.float64)
+        X = args[0]
+        E = args[1]
+
+        X_t = np.where(X[:, -len(self.t):] == 1)[1]
+        X_list = []
+        E_list = []
+        w_idx_list = []
+        mask_list = []
+        for j in range(len(self.t)):
+            X_j = X[X_t == j, :-len(self.t)].T  # gene x cell
+            E_j = E[X_t == j, :].T
+
+            X_a = X_j.copy()
+            X_a[0, X_a.sum(axis=0) == 0] = -1  # for control cell, use w value of gene 0
+            w_idx_j = jnp.array(np.where(X_a.T < 0)[1])
+
+
+            # ignore self repression (KO effect)
+            mask_j = X_j.copy()  # gene x cell
+            mask_j[X_j < 0] = 0
+            mask_j[X_j == 0] = 1
+
+            X_list.append(X_j)
+            E_list.append(E_j)
+            w_idx_list.append(w_idx_j)
+            mask_list.append(mask_j)
+
+        g_sq = np.array(grad(self.loss_sq)(params, args[0], args[1], X_t, X_list, E_list, w_idx_list, mask_list), dtype=np.float64)
         g_sq.setflags(write=True)
         g_reg = np.array(grad(self.loss_regularize)(params), dtype=np.float64)
         g_reg.setflags(write=True)
@@ -121,10 +180,10 @@ class RengeSub(BaseEstimator):
 
     def fit(self, X, E):
         self.n_gene = E.shape[1]
-        self.t = X.columns[self.n_gene:]
+        self.t = X.columns[self.n_gene:].astype('float32')
         gene_names = E.columns
-        X = X.values
-        E = E.values
+        X = np.array(X.values)
+        E = np.array(E.values)
 
         ### initiialize parameters
         # A_lr, b_lr = self.linear_regression(X, E)
@@ -178,17 +237,19 @@ class RengeSub(BaseEstimator):
 
         return self
 
-    @jax.partial(jit, static_argnums=(0, 1))
-    def calc_pred_j(self, X_list, A, b, alpha, beta, gamma):
+    #@partial(jit, static_argnums=(0, 1))
+    @partial(jit, static_argnums=(0,))
+    def calc_pred_j(self, X_list, w_idx_list, A, b, alpha, beta, gamma):
         pred_j_list = []
 
         for j in range(len(self.t)):
             X = X_list[j].T  # gene x cell
             pred_j = jnp.tile(b[self.n_gene * j:self.n_gene * (j + 1)], (X.shape[1], 1)).T  # gene x cell
             M = jnp.where(X < 0, 0, 1)
-            X_a = X.copy()
-            X_a[0, X_a.sum(axis=0) == 0] = -1  # for control cell, use w value of gene 0
-            w_idx = jnp.array(np.where(X_a.T < 0)[1])
+            #X_a = X.copy()
+            #X_a[0, X_a.sum(axis=0) == 0] = -1  # for control cell, use w value of gene 0
+            #w_idx = jnp.array(np.where(X_a.T < 0)[1])
+            w_idx = w_idx_list[j]
 
             for k in range(self.n_k):
                 pred_j_l = A @ X
@@ -213,10 +274,17 @@ class RengeSub(BaseEstimator):
 
         X_t = np.where(X[:, -len(self.t):] == 1)[1]
         X_list = []
+        w_idx_list = []
         for j in range(len(self.t)):
             X_list.append(X[X_t == j, :-len(self.t)])
 
-        pred_j_list = self.calc_pred_j(X_list, A, b, alpha, beta, gamma)
+            X_j = X[X_t == j, :-len(self.t)].T  # gene x cell
+            X_a = X_j.copy()
+            X_a[0, X_a.sum(axis=0) == 0] = -1  # for control cell, use w value of gene 0
+            w_idx_j = jnp.array(np.where(X_a.T < 0)[1])
+            w_idx_list.append(w_idx_j)
+
+        pred_j_list = self.calc_pred_j(X_list, w_idx_list, A, b, alpha, beta, gamma)
         for j in range(len(self.t)):
             pred_j = pred_j_list[j]
             pred[X_t == j] = pred_j.T
@@ -340,6 +408,7 @@ class Renge():
     def preprocess_X(self, X, E):
         self.E = E
         X, t = self.one_hot_t(X)
+        X.columns = X.columns.astype(str)
         X = self.adjust_X(X, E, t)
 
         X_col = X.columns
