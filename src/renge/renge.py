@@ -5,7 +5,6 @@ import optuna
 import pandas as pd
 import tqdm
 from jax import grad, jit
-from jax.interpreters import xla
 from scipy.optimize import minimize
 from scipy.stats import norm
 from scipy.stats import truncnorm
@@ -321,7 +320,7 @@ class Renge():
         t = self.X_prep.columns[self.E.shape[1]:]
         T_one_hot = np.zeros((X_pred.shape[0], len(t)))
         for i in range(T_one_hot.shape[0]):
-            idx = np.where(t == T[i])[0]
+            idx = np.where(np.array(t, dtype=float) == float(T[i]))[0]
             T_one_hot[i, idx] = 1
         T_one_hot = pd.DataFrame(T_one_hot, index=X_pred.index)
         X_T = pd.concat([X_pred.iloc[:, :-1], T_one_hot], axis=1)
@@ -398,7 +397,7 @@ class Renge():
         t = np.sort(list(set(T)))
         T_one_hot = np.zeros((X.shape[0], len(t)))
         for i in range(T_one_hot.shape[0]):
-            idx = np.where(t == T[i])[0]
+            idx = np.where(np.array(t, dtype=float) == float(T[i]))[0]
             T_one_hot[i, idx] = 1
         T_one_hot = pd.DataFrame(T_one_hot, index=X.index)
         X_T = pd.concat([X.iloc[:, :-1], T_one_hot], axis=1)
@@ -514,7 +513,7 @@ class Renge():
             reg.fit(self.X_prep, E_boot)
             A_boot = reg.A.values
             A_boot_list.append(A_boot)
-            xla._xla_callable.cache_clear()
+            jax.clear_caches()
 
         A_boot_list = np.array(A_boot_list)
         self.A_boot_list = A_boot_list
